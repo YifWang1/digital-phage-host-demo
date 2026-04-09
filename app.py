@@ -128,6 +128,23 @@ PHAGE_FEATURE_SECTIONS = [
     ),
 ]
 
+PROJECT_VISION_TEXT = (
+    "The long-term goal of this project is to build a digital phage–host "
+    "interaction system that leverages phage/host genomic sequences and "
+    "related annotations to infer, simulate, and predict infection success, "
+    "host defense effects, and other key infection-associated interaction "
+    "behaviors."
+)
+
+AUTHOR_TEXT = "Developed by Yinfeng Wang, Ocean University of China"
+
+FOOTER_LINES = [
+    "© 2026 Yinfeng Wang (王崟沣). All rights reserved.",
+    "This demo is a phase-1 research prototype for academic presentation and research communication only.",
+    "It is not a validated quantitative prediction platform.",
+    "For collaboration or further development of this project, please contact: yif_wang1@163.com",
+]
+
 
 def _default_index(options: list[str], preferred: str) -> int:
     """Return the preferred option index when present."""
@@ -392,6 +409,14 @@ def _render_feature_layer_panels(host_name: str, phage_name: str) -> None:
                 _render_feature_section(section_title, phage_config, section_fields)
 
 
+def _render_footer() -> None:
+    """Render a simple footer for public demo attribution and contact."""
+
+    st.markdown("---")
+    for line in FOOTER_LINES:
+        st.caption(line)
+
+
 def main() -> None:
     """Render the enhanced single-page Streamlit wrapper."""
 
@@ -400,10 +425,8 @@ def main() -> None:
         layout="wide",
     )
     st.title("Digital Host–Phage Phase 1 Demo")
-    st.caption(
-        "Minimal Streamlit wrapper around the existing phase-1 rule-based "
-        "simulation pipeline."
-    )
+    st.caption(PROJECT_VISION_TEXT)
+    st.caption(AUTHOR_TEXT)
 
     host_options = sorted(host_configs.keys())
     phage_options = sorted(phage_configs.keys())
@@ -489,23 +512,24 @@ def main() -> None:
     result = st.session_state["simulation_result"]
     if result is None:
         st.info("Select a host/phage pair or click a demo case, then run simulation.")
-        return
+    else:
+        st.subheader("Case Header")
+        header_columns = st.columns(3)
+        header_columns[0].metric("Host name", st.session_state["active_host"])
+        header_columns[1].metric("Phage name", st.session_state["active_phage"])
+        header_columns[2].metric("Case label", st.session_state["active_case_label"])
 
-    st.subheader("Case Header")
-    header_columns = st.columns(3)
-    header_columns[0].metric("Host name", st.session_state["active_host"])
-    header_columns[1].metric("Phage name", st.session_state["active_phage"])
-    header_columns[2].metric("Case label", st.session_state["active_case_label"])
+        _render_summary_cards(result)
+        _render_stage_progression_bar(result)
+        _render_feature_layer_panels(
+            st.session_state["active_host"],
+            st.session_state["active_phage"],
+        )
 
-    _render_summary_cards(result)
-    _render_stage_progression_bar(result)
-    _render_feature_layer_panels(
-        st.session_state["active_host"],
-        st.session_state["active_phage"],
-    )
+        st.subheader("Full JSON")
+        st.json(result)
 
-    st.subheader("Full JSON")
-    st.json(result)
+    _render_footer()
 
 
 if __name__ == "__main__":
